@@ -84,7 +84,7 @@ type ForecastResponse = {
 };
 
 async function getJson<T>(url: string): Promise<T> {
-  const response = await fetch(url, { next: { revalidate: 600 } });
+  const response = await fetch(url, { next: { revalidate: 300 } });
   if (!response.ok) throw new Error("UPSTREAM_ERROR");
   return response.json() as Promise<T>;
 }

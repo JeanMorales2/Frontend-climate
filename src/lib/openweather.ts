@@ -8,7 +8,7 @@ export async function requestWeather(path: string, language: Language = "es"): P
   const separator = path.includes("?") ? "&" : "?";
   const response = await fetch(
     `https://api.openweathermap.org${path}${separator}appid=${encodeURIComponent(key)}&units=metric&lang=${language}`,
-    { next: { revalidate: 600 } },
+    { next: { revalidate: 300 } },
   );
   if (!response.ok) {
     // OpenWeather usa 404 para ciudades inexistentes; exponemos un código estable al cliente.

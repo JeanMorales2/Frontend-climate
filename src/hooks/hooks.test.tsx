@@ -3,7 +3,7 @@ import { useDebounce } from "./useDebounce";
 import { useMediaQuery } from "./useMediaQuery";
 import { useCitySuggestions } from "./useCitySuggestions";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { useWeather } from "./useWeather";
+import { useWeather, WEATHER_REFRESH_MS } from "./useWeather";
 import { useForecast } from "./useForecast";
 
 describe("hooks", () => {
@@ -60,5 +60,40 @@ describe("hooks", () => {
     await waitFor(() => expect(weather.result.current.error?.message).toBe("CITY_NOT_FOUND"));
     const forecast = renderHook(() => useForecast("Atlantis"), { wrapper });
     await waitFor(() => expect(forecast.result.current.error?.message).toBe("CITY_NOT_FOUND"));
+  });
+
+  it("vuelve a pedir el clima y el pronóstico cada diez minutos", async () => {
+    jest.useFakeTimers();
+    const fetchMock = jest.fn().mockResolvedValue({ ok: true, json: async () => [] });
+    global.fetch = fetchMock;
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    const wrapper = ({ children }: { children: React.ReactNode }) => (
+      <QueryClientProvider client={client}>{children}</QueryClientProvider>
+    );
+
+    renderHook(
+      () => {
+        useWeather("Managua");
+        useForecast("Managua");
+      },
+      { wrapper },
+    );
+    await act(async () => {
+      await jest.advanceTimersByTimeAsync(0);
+    });
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+
+    await act(async () => {
+      await jest.advanceTimersByTimeAsync(WEATHER_REFRESH_MS);
+    });
+    expect(fetchMock).toHaveBeenCalledTimes(4);
+    expect(fetchMock.mock.calls.slice(2).map(([url]) => url)).toEqual([
+      "/api/weather?city=Managua&lang=es",
+      "/api/forecast?city=Managua&lang=es",
+    ]);
+
+    client.clear();
+    jest.useRealTimers();
+    global.fetch = jest.fn();
   });
 });
