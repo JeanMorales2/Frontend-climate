@@ -1,0 +1,12 @@
+node_modules
+.next
+coverage
+.env*
+PLAN.md
+*.md
+!README.md
+src/**/*.test.ts
+src/**/*.test.tsx
+jest.config.ts
+jest.setup.ts
+.git

@@ -1,0 +1,6 @@
+PLAN.md
+node_modules
+.next
+coverage
+.npm-cache
+package-lock.json
