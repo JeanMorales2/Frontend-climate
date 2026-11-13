@@ -13,6 +13,20 @@ export function WeatherBackground({ icon }: { icon?: string }) {
   const night = icon?.endsWith("n") ?? false;
   const [flash, setFlash] = useState(false);
 
+  // El clima actual se expone en <html> para que el CSS tiña toda la página
+  // (fondo, tarjetas y bordes), no solo esta capa.
+  useEffect(() => {
+    const root = document.documentElement;
+    if (!icon) {
+      delete root.dataset.weather;
+      return;
+    }
+    root.dataset.weather = condition === "clear" && night ? "clear-night" : condition;
+    return () => {
+      delete root.dataset.weather;
+    };
+  }, [icon, condition, night]);
+
   useEffect(() => {
     if (condition !== "storm") return;
     let timeout = 0;

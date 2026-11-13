@@ -266,7 +266,9 @@ describe("componentes de interfaz", () => {
   });
 
   it("renderiza capas de ambiente para cada condición y respeta movimiento reducido", () => {
-    const matchMedia = jest.spyOn(window, "matchMedia").mockReturnValue({
+    // matchMedia ya es un mock global; se cambia solo aquí y se devuelve el original al final.
+    const originalMatchMedia = window.matchMedia;
+    window.matchMedia = jest.fn().mockReturnValue({
       matches: true,
       media: "(prefers-reduced-motion: reduce)",
       onchange: null,
@@ -290,7 +292,7 @@ describe("componentes de interfaz", () => {
     expect(container.querySelector(".cloud-layer")).not.toBeInTheDocument();
     unmount();
     getContext.mockRestore();
-    matchMedia.mockRestore();
+    window.matchMedia = originalMatchMedia;
   });
 
   it("alterna las preferencias compactas y los tres temas", () => {
@@ -344,5 +346,20 @@ describe("componentes de interfaz", () => {
     expect(onTheme).toHaveBeenNthCalledWith(3, "system");
     expect(transition).toHaveBeenCalledTimes(3);
     Reflect.deleteProperty(document, "startViewTransition");
+  });
+
+  it("publica el clima en <html> para teñir la página y lo limpia al desmontar", () => {
+    const root = document.documentElement;
+    const { rerender, unmount } = render(<WeatherBackground icon="10d" />);
+    expect(root.dataset.weather).toBe("rain");
+    rerender(<WeatherBackground icon="01n" />);
+    expect(root.dataset.weather).toBe("clear-night");
+    rerender(<WeatherBackground icon="01d" />);
+    expect(root.dataset.weather).toBe("clear");
+    rerender(<WeatherBackground />);
+    expect(root.dataset.weather).toBeUndefined();
+    rerender(<WeatherBackground icon="13d" />);
+    unmount();
+    expect(root.dataset.weather).toBeUndefined();
   });
 });

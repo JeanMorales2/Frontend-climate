@@ -7,16 +7,16 @@
   --subtle: #596a62;
   --accent: #a2462c;
   --accent-ink: #3b735c;
-  --paper: #f4f5ef;
-  --panel: #fff;
-  --line: #e6ebe4;
+  --paper-base: #f4f5ef;
+  --panel-base: #fff;
+  --line-base: #e6ebe4;
   --border: #dfe7de;
   --mint: #e4f0e9;
   --icon: #71967f;
   --focus: #a95432;
   --shadow: #213b2810;
   --panel-tint: #edf5ed;
-  --detail-surface: #f5f7f2;
+  --detail-surface-base: #f5f7f2;
   --danger: #a23f36;
   --danger-surface: #fff8f5;
   --danger-border: #f1d3cb;
@@ -35,6 +35,18 @@
   --fx-glow-rain: #b5ccd8;
   --fx-glow-snow: #d3dde8;
   --fx-glow-night: #8796b8;
+  --fx-glow-night-deep: #c3cbe0;
+  /* Tinte de página según el clima (ver html[data-weather]). */
+  --tint-clear: #f2c26b;
+  --tint-clear-night: #8a9ccc;
+  --tint-clouds: #a9b8ae;
+  --tint-rain: #86abc2;
+  --tint-storm: #8c8fb3;
+  --tint-snow: #c4d6ea;
+  --tint-mist: #bcc5c0;
+  --tint-paper: 22%;
+  --tint-panel: 10%;
+  --tint-line: 30%;
 }
 
 * {
@@ -54,6 +66,67 @@
 ::view-transition-old(root),
 ::view-transition-new(root) {
   animation-duration: 300ms;
+}
+/* El tinte se registra como color para que el navegador pueda animarlo: así el cambio
+   de clima recorre toda la página con una transición en lugar de un salto. */
+@property --tint {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #808080;
+}
+@property --tint-level {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 0;
+}
+html {
+  --paper: color-mix(
+    in srgb,
+    var(--paper-base),
+    var(--tint) calc(var(--tint-level) * var(--tint-paper))
+  );
+  --panel: color-mix(
+    in srgb,
+    var(--panel-base),
+    var(--tint) calc(var(--tint-level) * var(--tint-panel))
+  );
+  --line: color-mix(
+    in srgb,
+    var(--line-base),
+    var(--tint) calc(var(--tint-level) * var(--tint-line))
+  );
+  --detail-surface: color-mix(
+    in srgb,
+    var(--detail-surface-base),
+    var(--tint) calc(var(--tint-level) * var(--tint-panel))
+  );
+  transition:
+    --tint 1.2s ease,
+    --tint-level 1.2s ease;
+}
+html[data-weather] {
+  --tint-level: 1;
+}
+html[data-weather="clear"] {
+  --tint: var(--tint-clear);
+}
+html[data-weather="clear-night"] {
+  --tint: var(--tint-clear-night);
+}
+html[data-weather="clouds"] {
+  --tint: var(--tint-clouds);
+}
+html[data-weather="rain"] {
+  --tint: var(--tint-rain);
+}
+html[data-weather="storm"] {
+  --tint: var(--tint-storm);
+}
+html[data-weather="snow"] {
+  --tint: var(--tint-snow);
+}
+html[data-weather="mist"] {
+  --tint: var(--tint-mist);
 }
 html {
   min-width: 320px;
@@ -95,16 +168,16 @@ select:focus-visible {
   --subtle: #c0cdc5;
   --accent-ink: #a9d2b8;
   --accent: #ffb18e;
-  --paper: #182923;
-  --panel: #22362e;
-  --line: #385045;
+  --paper-base: #182923;
+  --panel-base: #22362e;
+  --line-base: #385045;
   --border: #496457;
   --mint: #30473c;
   --icon: #a9d2b8;
   --focus: #ffb18e;
   --shadow: #00000035;
   --panel-tint: #2c493b;
-  --detail-surface: #293f35;
+  --detail-surface-base: #293f35;
   --danger: #ffb4a6;
   --danger-surface: #3a2622;
   --danger-border: #6b3a31;
@@ -122,6 +195,17 @@ select:focus-visible {
   --fx-glow-rain: #c8dbe1;
   --fx-glow-snow: #e4eaf0;
   --fx-glow-night: #465678;
+  --fx-glow-night-deep: #243149;
+  --tint-clear: #8a6a2c;
+  --tint-clear-night: #2c3f6e;
+  --tint-clouds: #44544c;
+  --tint-rain: #2e5368;
+  --tint-storm: #3b3560;
+  --tint-snow: #48596b;
+  --tint-mist: #47504c;
+  --tint-paper: 35%;
+  --tint-panel: 18%;
+  --tint-line: 30%;
 }
 .theme-dark .current {
   background: linear-gradient(130deg, var(--panel) 45%, var(--panel-tint));
@@ -137,16 +221,16 @@ select:focus-visible {
     --subtle: #c0cdc5;
     --accent-ink: #a9d2b8;
     --accent: #ffb18e;
-    --paper: #182923;
-    --panel: #22362e;
-    --line: #385045;
+    --paper-base: #182923;
+    --panel-base: #22362e;
+    --line-base: #385045;
     --border: #496457;
     --mint: #30473c;
     --icon: #a9d2b8;
     --focus: #ffb18e;
     --shadow: #00000035;
     --panel-tint: #2c493b;
-    --detail-surface: #293f35;
+    --detail-surface-base: #293f35;
     --danger: #ffb4a6;
     --danger-surface: #3a2622;
     --danger-border: #6b3a31;
@@ -164,6 +248,17 @@ select:focus-visible {
     --fx-glow-rain: #c8dbe1;
     --fx-glow-snow: #e4eaf0;
     --fx-glow-night: #465678;
+    --fx-glow-night-deep: #243149;
+    --tint-clear: #8a6a2c;
+    --tint-clear-night: #2c3f6e;
+    --tint-clouds: #44544c;
+    --tint-rain: #2e5368;
+    --tint-storm: #3b3560;
+    --tint-snow: #48596b;
+    --tint-mist: #47504c;
+    --tint-paper: 35%;
+    --tint-panel: 18%;
+    --tint-line: 30%;
   }
   html.theme-system .current {
     background: linear-gradient(130deg, var(--panel) 45%, var(--panel-tint));
@@ -225,7 +320,7 @@ html.theme-system {
   background: radial-gradient(
     ellipse at 78% 0%,
     var(--fx-glow-night) 0,
-    color-mix(in srgb, var(--fx-glow-night) 55%, #000) 35%,
+    var(--fx-glow-night-deep) 35%,
     transparent 75%
   );
 }
