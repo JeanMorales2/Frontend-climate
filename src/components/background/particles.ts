@@ -1,5 +1,25 @@
 export type Particle = { x: number; y: number; speed: number; size: number; phase: number };
 
+export type ParticlePalette = { rain: string; snow: string; sparkle: string };
+
+// Valores del tema oscuro; se usan si las variables CSS todavía no están disponibles.
+export const defaultPalette: ParticlePalette = {
+  rain: "#d5e8f2",
+  snow: "#ffffff",
+  sparkle: "#fff1c5",
+};
+
+// Los colores salen de las variables --fx-* para que las partículas se vean en los dos temas.
+export function readPalette(element: Element): ParticlePalette {
+  const styles = getComputedStyle(element);
+  const read = (name: string, fallback: string) => styles.getPropertyValue(name).trim() || fallback;
+  return {
+    rain: read("--fx-rain", defaultPalette.rain),
+    snow: read("--fx-snow", defaultPalette.snow),
+    sparkle: read("--fx-sparkle", defaultPalette.sparkle),
+  };
+}
+
 export function createParticles(width: number, height: number, count: number): Particle[] {
   return Array.from({ length: count }, () => ({
     x: Math.random() * width,
@@ -17,6 +37,7 @@ export function drawParticles(
   height: number,
   condition: string,
   time: number,
+  palette: ParticlePalette = defaultPalette,
 ) {
   context.clearRect(0, 0, width, height);
   for (const particle of particles) {
@@ -30,7 +51,7 @@ export function drawParticles(
     }
     if (particle.x < -5) particle.x = width + 5;
     context.globalAlpha = 0.22 + (Math.sin(time / 550 + particle.phase) + 1) * 0.2;
-    context.fillStyle = rain ? "#d5e8f2" : snow ? "#ffffff" : "#fff1c5";
+    context.fillStyle = rain ? palette.rain : snow ? palette.snow : palette.sparkle;
     context.beginPath();
     if (rain) {
       context.moveTo(particle.x, particle.y);

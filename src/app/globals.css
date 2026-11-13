@@ -20,6 +20,21 @@
   --danger: #a23f36;
   --danger-surface: #fff8f5;
   --danger-border: #f1d3cb;
+  /* Efectos del fondo: en claro necesitan tonos más oscuros para verse sobre el papel. */
+  --fx-opacity: 0.9;
+  --fx-rain: #4d7d98;
+  --fx-snow: #8aa2b8;
+  --fx-sparkle: #d48f2c;
+  --fx-cloud: #8fa79a73;
+  --fx-fog: #a9b8ae66;
+  --fx-star: #c7922f;
+  --fx-ray: #e8a73d40;
+  --fx-lightning: #9fb4dc;
+  --fx-glow: #d6e3cf;
+  --fx-glow-clear: #f8d9a0;
+  --fx-glow-rain: #b5ccd8;
+  --fx-glow-snow: #d3dde8;
+  --fx-glow-night: #8796b8;
 }
 
 * {
@@ -93,6 +108,20 @@ select:focus-visible {
   --danger: #ffb4a6;
   --danger-surface: #3a2622;
   --danger-border: #6b3a31;
+  --fx-opacity: 0.45;
+  --fx-rain: #d5e8f2;
+  --fx-snow: #ffffff;
+  --fx-sparkle: #fff1c5;
+  --fx-cloud: #ffffff99;
+  --fx-fog: #f5fbf677;
+  --fx-star: #f8ecc7;
+  --fx-ray: #fff4d51b;
+  --fx-lightning: #d9e6ff;
+  --fx-glow: #e5eddf;
+  --fx-glow-clear: #fff0d7;
+  --fx-glow-rain: #c8dbe1;
+  --fx-glow-snow: #e4eaf0;
+  --fx-glow-night: #465678;
 }
 .theme-dark .current {
   background: linear-gradient(130deg, var(--panel) 45%, var(--panel-tint));
@@ -121,6 +150,20 @@ select:focus-visible {
     --danger: #ffb4a6;
     --danger-surface: #3a2622;
     --danger-border: #6b3a31;
+    --fx-opacity: 0.45;
+    --fx-rain: #d5e8f2;
+    --fx-snow: #ffffff;
+    --fx-sparkle: #fff1c5;
+    --fx-cloud: #ffffff99;
+    --fx-fog: #f5fbf677;
+    --fx-star: #f8ecc7;
+    --fx-ray: #fff4d51b;
+    --fx-lightning: #d9e6ff;
+    --fx-glow: #e5eddf;
+    --fx-glow-clear: #fff0d7;
+    --fx-glow-rain: #c8dbe1;
+    --fx-glow-snow: #e4eaf0;
+    --fx-glow-night: #465678;
   }
   html.theme-system .current {
     background: linear-gradient(130deg, var(--panel) 45%, var(--panel-tint));
@@ -149,8 +192,8 @@ html.theme-system {
   pointer-events: none;
   inset: 0 0 auto;
   height: 370px;
-  opacity: 0.45;
-  background: radial-gradient(ellipse at 78% 0%, #e5eddf 0, transparent 52%);
+  opacity: var(--fx-opacity);
+  background: radial-gradient(ellipse at 78% 0%, var(--fx-glow) 0, transparent 52%);
 }
 .weather-background span {
   position: absolute;
@@ -179,7 +222,12 @@ html.theme-system {
     color 400ms ease;
 }
 .weather-background.night {
-  background: radial-gradient(ellipse at 78% 0%, #465678 0, #243149 35%, transparent 75%);
+  background: radial-gradient(
+    ellipse at 78% 0%,
+    var(--fx-glow-night) 0,
+    color-mix(in srgb, var(--fx-glow-night) 55%, #000) 35%,
+    transparent 75%
+  );
 }
 .weather-particles {
   position: absolute;
@@ -204,7 +252,7 @@ html.theme-system {
   width: 32%;
   height: 76px;
   border-radius: 50%;
-  background: #fff9;
+  background: var(--fx-cloud);
   filter: blur(17px);
   animation: cloud-sail 38s linear infinite;
 }
@@ -230,7 +278,7 @@ html.theme-system {
   width: 150%;
   height: 28px;
   border-radius: 50%;
-  background: #f5fbf677;
+  background: var(--fx-fog);
   filter: blur(14px);
   animation: fog-drift 23s ease-in-out infinite alternate;
 }
@@ -249,7 +297,7 @@ html.theme-system {
   background: repeating-conic-gradient(
     from 225deg at 100% 0%,
     transparent 0deg 8deg,
-    #fff4d51b 9deg 11deg,
+    var(--fx-ray) 9deg 11deg,
     transparent 12deg 18deg
   );
   mask-image: linear-gradient(to bottom, #0009, transparent 80%);
@@ -260,7 +308,7 @@ html.theme-system {
   width: 3px;
   height: 3px;
   border-radius: 50%;
-  background: #f8ecc7;
+  background: var(--fx-star);
   box-shadow: 0 0 9px #fff1c9;
   animation: star-twinkle 2.7s ease-in-out infinite alternate;
 }
@@ -295,7 +343,7 @@ html.theme-system {
 }
 .ambient-lightning {
   opacity: 0;
-  background: #d9e6ff;
+  background: var(--fx-lightning);
 }
 .weather-background.is-flashing .ambient-lightning {
   animation: ambient-flash 180ms ease-out;
@@ -332,13 +380,13 @@ html.theme-system {
 }
 .condition-rain,
 .condition-storm {
-  background: radial-gradient(ellipse at 78% 0%, #c8dbe1 0, transparent 55%);
+  background: radial-gradient(ellipse at 78% 0%, var(--fx-glow-rain) 0, transparent 55%);
 }
 .condition-snow {
-  background: radial-gradient(ellipse at 78% 0%, #e4eaf0 0, transparent 55%);
+  background: radial-gradient(ellipse at 78% 0%, var(--fx-glow-snow) 0, transparent 55%);
 }
 .condition-clear {
-  background: radial-gradient(ellipse at 78% 0%, #fff0d7 0, transparent 55%);
+  background: radial-gradient(ellipse at 78% 0%, var(--fx-glow-clear) 0, transparent 55%);
 }
 .topbar {
   height: 92px;

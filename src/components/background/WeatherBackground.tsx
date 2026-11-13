@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { motion, useMotionValue, useSpring } from "motion/react";
 import { getCondition } from "@/lib/conditions";
-import { createParticles, drawParticles } from "@/components/background/particles";
+import { createParticles, drawParticles, readPalette } from "@/components/background/particles";
 
 export function WeatherBackground({ icon }: { icon?: string }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -63,9 +63,17 @@ export function WeatherBackground({ icon }: { icon?: string }) {
       );
     };
     let particles = createParticles(width, height, 20);
+    let palette = readPalette(canvas);
+    let paletteReadAt = 0;
     const animate = (time: number) => {
       if (document.hidden) return;
-      drawParticles(context!, particles, width, height, condition, time);
+      // Releer los colores cada medio segundo basta para seguir un cambio de tema
+      // sin consultar estilos en cada cuadro.
+      if (time - paletteReadAt > 500) {
+        palette = readPalette(canvas);
+        paletteReadAt = time;
+      }
+      drawParticles(context!, particles, width, height, condition, time, palette);
       frame = requestAnimationFrame(animate);
     };
     const visibility = () => {
