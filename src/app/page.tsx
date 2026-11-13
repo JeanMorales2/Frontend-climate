@@ -155,7 +155,7 @@ export default function Home() {
       </AnimatePresence>
       <footer>
         <span>{translate(language, "footer")}</span>
-        <span>OpenWeather</span>
+        <span>OpenWeather · Open-Meteo</span>
       </footer>
     </main>
   );

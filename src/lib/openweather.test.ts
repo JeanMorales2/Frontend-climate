@@ -1,4 +1,4 @@
-import { getForecast, getWeather, requestWeather } from "./openweather";
+import { getForecast, getWeather, requestWeather, searchOpenWeatherCities } from "./openweather";
 
 const rawCurrent = {
   name: "Lima",
@@ -45,5 +45,21 @@ describe("cliente OpenWeather", () => {
       expect.stringContaining("appid=server-secret"),
       expect.any(Object),
     );
+  });
+});
+
+describe("búsqueda de ciudades en OpenWeather", () => {
+  it("normaliza las sugerencias", async () => {
+    process.env.OPENWEATHER_API_KEY = "server-secret";
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      json: async () => [
+        { name: "Madrid", country: "ES", state: "Madrid", lat: 1, lon: 2, extra: 1 },
+      ],
+    });
+    await expect(searchOpenWeatherCities("Madrid")).resolves.toEqual([
+      { name: "Madrid", country: "ES", state: "Madrid", lat: 1, lon: 2 },
+    ]);
+    expect((global.fetch as jest.Mock).mock.calls[0][0]).toContain("/geo/1.0/direct?q=Madrid");
   });
 });

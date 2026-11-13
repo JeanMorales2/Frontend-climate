@@ -1,8 +1,8 @@
 /** @jest-environment node */
 import { NextRequest } from "next/server";
 import { GET } from "./route";
-jest.mock("@/lib/openweather", () => ({ getWeather: jest.fn() }));
-import { getWeather } from "@/lib/openweather";
+jest.mock("@/lib/weather-service", () => ({ getWeather: jest.fn() }));
+import { getWeather } from "@/lib/weather-service";
 const request = (url: string) => new NextRequest(url);
 describe("GET /api/weather", () => {
   beforeEach(() => jest.clearAllMocks());

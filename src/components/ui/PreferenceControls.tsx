@@ -30,7 +30,12 @@ export function PreferenceControls({ language, theme, unit, onLanguage, onTheme,
   return (
     <div className="preference-controls">
       <div className="compact-preferences">
-        <button className="compact-preference unit-compact" type="button" aria-label={translate(language, "unit")} onClick={onUnit}>
+        <button
+          className="compact-preference unit-compact"
+          type="button"
+          aria-label={translate(language, "unit")}
+          onClick={onUnit}
+        >
           °{unit === "celsius" ? "C" : "F"}
         </button>
         <button
@@ -41,15 +46,33 @@ export function PreferenceControls({ language, theme, unit, onLanguage, onTheme,
         >
           <ThemeIcon size={16} aria-hidden="true" />
         </button>
-        <button className="compact-preference language-compact" type="button" aria-label={translate(language, "language")} onClick={() => onLanguage(language === "es" ? "en" : "es")}>
+        <button
+          className="compact-preference language-compact"
+          type="button"
+          aria-label={translate(language, "language")}
+          onClick={() => onLanguage(language === "es" ? "en" : "es")}
+        >
           {language.toUpperCase()}
         </button>
       </div>
       <div className="full-preferences">
-        <div className="choice-control unit-control" role="group" aria-label={translate(language, "unit")}>
+        <div
+          className="choice-control unit-control"
+          role="group"
+          aria-label={translate(language, "unit")}
+        >
           {(["celsius", "fahrenheit"] as const).map((value) => (
-            <motion.button type="button" key={value} className="choice-option" aria-label={value === "celsius" ? "°C" : "°F"} aria-pressed={unit === value} onClick={() => unit !== value && onUnit()}>
-              {unit === value && <motion.span className="choice-highlight" layoutId="unit-toggle-highlight" />}
+            <motion.button
+              type="button"
+              key={value}
+              className="choice-option"
+              aria-label={value === "celsius" ? "°C" : "°F"}
+              aria-pressed={unit === value}
+              onClick={() => unit !== value && onUnit()}
+            >
+              {unit === value && (
+                <motion.span className="choice-highlight" layoutId="unit-toggle-highlight" />
+              )}
               <span>{value === "celsius" ? "°C" : "°F"}</span>
             </motion.button>
           ))}
@@ -57,18 +80,40 @@ export function PreferenceControls({ language, theme, unit, onLanguage, onTheme,
         <div className="choice-control" role="group" aria-label={translate(language, "theme")}>
           <Sun size={14} aria-hidden="true" />
           {themes.map((value) => (
-            <motion.button type="button" key={value} className="choice-option" aria-label={translate(language, value)} aria-pressed={theme === value} onClick={() => changeTheme(value)}>
-              {theme === value && <motion.span className="choice-highlight" layoutId="theme-toggle-highlight" />}
+            <motion.button
+              type="button"
+              key={value}
+              className="choice-option"
+              aria-label={translate(language, value)}
+              aria-pressed={theme === value}
+              onClick={() => changeTheme(value)}
+            >
+              {theme === value && (
+                <motion.span className="choice-highlight" layoutId="theme-toggle-highlight" />
+              )}
               <span>{translate(language, value)}</span>
             </motion.button>
           ))}
           <Moon size={14} aria-hidden="true" />
         </div>
-        <div className="choice-control language-control" role="group" aria-label={translate(language, "language")}>
+        <div
+          className="choice-control language-control"
+          role="group"
+          aria-label={translate(language, "language")}
+        >
           <Languages size={14} aria-hidden="true" />
           {(["es", "en"] as const).map((value) => (
-            <motion.button type="button" key={value} className="choice-option" aria-label={value.toUpperCase()} aria-pressed={language === value} onClick={() => onLanguage(value)}>
-              {language === value && <motion.span className="choice-highlight" layoutId="language-toggle-highlight" />}
+            <motion.button
+              type="button"
+              key={value}
+              className="choice-option"
+              aria-label={value.toUpperCase()}
+              aria-pressed={language === value}
+              onClick={() => onLanguage(value)}
+            >
+              {language === value && (
+                <motion.span className="choice-highlight" layoutId="language-toggle-highlight" />
+              )}
               <span>{value.toUpperCase()}</span>
             </motion.button>
           ))}

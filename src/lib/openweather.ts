@@ -1,5 +1,5 @@
 import { mapForecast, mapWeather } from "@/lib/mappers";
-import type { ForecastDay, Language, Weather } from "@/types/weather";
+import type { CitySuggestion, ForecastDay, Language, Weather } from "@/types/weather";
 
 export async function requestWeather(path: string, language: Language = "es"): Promise<unknown> {
   const key = process.env.OPENWEATHER_API_KEY;
@@ -36,4 +36,11 @@ export async function getForecast(
       typeof mapForecast
     >[0],
   );
+}
+
+export async function searchOpenWeatherCities(city: string): Promise<CitySuggestion[]> {
+  const places = (await requestWeather(
+    `/geo/1.0/direct?q=${encodeURIComponent(city)}&limit=5`,
+  )) as CitySuggestion[];
+  return places.map(({ name, country, state, lat, lon }) => ({ name, country, state, lat, lon }));
 }

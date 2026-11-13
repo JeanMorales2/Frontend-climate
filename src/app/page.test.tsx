@@ -167,16 +167,37 @@ describe("consulta del clima", () => {
       dispatchEvent: jest.fn(),
     }));
     const scrollIntoView = jest.fn();
-    Object.defineProperty(HTMLElement.prototype, "scrollIntoView", { configurable: true, value: scrollIntoView });
-    const bounds = jest.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(function (this: HTMLElement) {
-      return { top: 900, bottom: 1200, left: 0, right: 300, width: 300, height: 300, x: 0, y: 900, toJSON: () => ({}) } as DOMRect;
+    Object.defineProperty(HTMLElement.prototype, "scrollIntoView", {
+      configurable: true,
+      value: scrollIntoView,
     });
+    const bounds = jest
+      .spyOn(HTMLElement.prototype, "getBoundingClientRect")
+      .mockImplementation(function (this: HTMLElement) {
+        return {
+          top: 900,
+          bottom: 1200,
+          left: 0,
+          right: 300,
+          width: 300,
+          height: 300,
+          x: 0,
+          y: 900,
+          toJSON: () => ({}),
+        } as DOMRect;
+      });
     const user = userEvent.setup();
-    render(<Providers><Home /></Providers>);
+    render(
+      <Providers>
+        <Home />
+      </Providers>,
+    );
     await user.type(screen.getByLabelText("Busca una ciudad"), "Madrid");
     await user.click(screen.getByRole("button", { name: "Buscar" }));
     await waitFor(() => expect(document.querySelector(".results")).toBeInTheDocument());
-    await waitFor(() => expect(scrollIntoView).toHaveBeenCalledWith({ behavior: "auto", block: "start" }));
+    await waitFor(() =>
+      expect(scrollIntoView).toHaveBeenCalledWith({ behavior: "auto", block: "start" }),
+    );
     bounds.mockRestore();
     window.matchMedia = originalMatchMedia;
   });

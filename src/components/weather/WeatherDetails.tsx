@@ -114,7 +114,6 @@ export function WeatherDetails({
           </strong>
         </motion.div>
         <div className="sun-arc-item">
-          <span>{translate(language, "sunrise")}</span>
           <SunArc sunrise={weather.sunrise} sunset={weather.sunset} now={now} language={language} />
         </div>
       </div>

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getWeather } from "@/lib/openweather";
+import { getWeather } from "@/lib/weather-service";
 export const dynamic = "force-dynamic";
 function failure(error: unknown) {
   const code = error instanceof Error ? error.message : "UPSTREAM_ERROR";

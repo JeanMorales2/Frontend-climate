@@ -1,37 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
+import { searchCities } from "@/lib/weather-service";
+
 export const dynamic = "force-dynamic";
+
+const statusByCode: Record<string, number> = {
+  CITY_NOT_FOUND: 404,
+  INVALID_API_KEY: 401,
+};
+
 export async function GET(request: NextRequest) {
   const city = request.nextUrl.searchParams.get("city")?.trim();
+  const language = request.nextUrl.searchParams.get("lang") === "en" ? "en" : "es";
   if (!city) return NextResponse.json({ code: "INVALID_QUERY" }, { status: 400 });
-  const key = process.env.OPENWEATHER_API_KEY;
-  if (!key) return NextResponse.json({ code: "INVALID_API_KEY" }, { status: 401 });
+
   try {
-    const response = await fetch(
-      `https://api.openweathermap.org/geo/1.0/direct?q=${encodeURIComponent(city)}&limit=5&appid=${encodeURIComponent(key)}`,
-    );
-    if (!response.ok) {
-      const code =
-        response.status === 401
-          ? "INVALID_API_KEY"
-          : response.status === 404
-            ? "CITY_NOT_FOUND"
-            : "UPSTREAM_ERROR";
-      return NextResponse.json(
-        { code },
-        { status: code === "UPSTREAM_ERROR" ? 502 : response.status },
-      );
-    }
-    const places = (await response.json()) as {
-      name: string;
-      country: string;
-      state?: string;
-      lat: number;
-      lon: number;
-    }[];
-    return NextResponse.json(
-      places.map(({ name, country, state, lat, lon }) => ({ name, country, state, lat, lon })),
-    );
-  } catch {
-    return NextResponse.json({ code: "UPSTREAM_ERROR" }, { status: 502 });
+    return NextResponse.json(await searchCities(city, language));
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "";
+    const code = message in statusByCode ? message : "UPSTREAM_ERROR";
+    return NextResponse.json({ code }, { status: statusByCode[code] ?? 502 });
   }
 }

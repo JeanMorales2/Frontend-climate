@@ -17,6 +17,9 @@
   --shadow: #213b2810;
   --panel-tint: #edf5ed;
   --detail-surface: #f5f7f2;
+  --danger: #a23f36;
+  --danger-surface: #fff8f5;
+  --danger-border: #f1d3cb;
 }
 
 * {
@@ -87,6 +90,9 @@ select:focus-visible {
   --shadow: #00000035;
   --panel-tint: #2c493b;
   --detail-surface: #293f35;
+  --danger: #ffb4a6;
+  --danger-surface: #3a2622;
+  --danger-border: #6b3a31;
 }
 .theme-dark .current {
   background: linear-gradient(130deg, var(--panel) 45%, var(--panel-tint));
@@ -112,6 +118,9 @@ select:focus-visible {
     --shadow: #00000035;
     --panel-tint: #2c493b;
     --detail-surface: #293f35;
+    --danger: #ffb4a6;
+    --danger-surface: #3a2622;
+    --danger-border: #6b3a31;
   }
   html.theme-system .current {
     background: linear-gradient(130deg, var(--panel) 45%, var(--panel-tint));
@@ -888,8 +897,9 @@ kbd {
 }
 .error {
   grid-column: 1 / -1;
-  color: #a23f36;
-  background: #fff8f5;
+  color: var(--danger);
+  background: var(--danger-surface);
+  border-color: var(--danger-border);
 }
 .error p {
   font-size: 13px;
