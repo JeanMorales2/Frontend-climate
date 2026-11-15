@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { searchCities } from "@/lib/weather-service";
+import { searchCities } from "@/features/weather/api";
 
 export const dynamic = "force-dynamic";
 

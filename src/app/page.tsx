@@ -1,22 +1,18 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { Cloud } from "lucide-react";
-import { SearchBar } from "@/components/search/SearchBar";
-import { RecentSearches } from "@/components/search/RecentSearches";
-import { CurrentWeather } from "@/components/weather/CurrentWeather";
-import { WeatherDetails } from "@/components/weather/WeatherDetails";
-import { Forecast } from "@/components/weather/Forecast";
-import { WeatherBackground } from "@/components/background/WeatherBackground";
-import { EmptyState } from "@/components/feedback/EmptyState";
-import { ErrorState } from "@/components/feedback/ErrorState";
-import { Skeletons } from "@/components/feedback/Skeletons";
-import { PreferenceControls } from "@/components/ui/PreferenceControls";
-import { useWeather } from "@/hooks/useWeather";
-import { useForecast } from "@/hooks/useForecast";
-import { usePreferences } from "@/store/preferences";
+import { RecentSearches, SearchBar } from "@/features/search";
+import { CurrentWeather, Forecast, useForecast, useWeather, WeatherDetails } from "@/features/weather";
+import { WeatherBackground } from "@/features/background";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { ErrorState } from "@/components/ui/ErrorState";
+import { Skeletons } from "@/components/ui/Skeletons";
+import { PreferenceControls } from "@/features/preferences";
+import { usePreferences } from "@/stores/preferences";
 import { translate } from "@/lib/i18n";
+import { DemoWelcome, useDemo } from "@/features/demo";
 
 export default function Home() {
   const [city, setCity] = useState("");
@@ -32,25 +28,46 @@ export default function Home() {
     removeRecent,
     clearRecent,
   } = usePreferences();
-  const weather = useWeather(city, language);
-  const forecast = useForecast(city, language);
+  const demo = useDemo(language);
+  const demoButtonRef = useRef<HTMLButtonElement>(null);
+  const [showWelcome, setShowWelcome] = useState(false);
+  const [showSearchPrompt, setShowSearchPrompt] = useState(false);
+  const weather = useWeather(city, language, !demo.running);
+  const forecast = useForecast(city, language, !demo.running);
+  const displayWeather = demo.step?.weather ?? weather.data;
+  const displayForecast = demo.step?.forecast ?? forecast.data ?? [];
+  const visualTheme = demo.step?.theme ?? theme;
 
   useEffect(() => {
     document.documentElement.classList.remove("theme-light", "theme-dark", "theme-system");
-    document.documentElement.classList.add(`theme-${theme}`);
+    document.documentElement.classList.add(`theme-${visualTheme}`);
     document.documentElement.lang = language;
-  }, [theme, language]);
+  }, [visualTheme, language]);
+
+  useEffect(() => {
+    if (city) return;
+    // La bienvenida pertenece a esta entrada de la página, no a una sesión del navegador.
+    setShowWelcome(true);
+  }, [city]);
+
+  const closeWelcome = useCallback(() => {
+    setShowWelcome(false);
+    setShowSearchPrompt(true);
+  }, []);
+  const startDemo = useCallback(() => { closeWelcome(); demo.start(); }, [closeWelcome, demo]);
 
   function search(nextCity: string) {
     const normalized = nextCity.trim();
     if (!normalized) return;
+    demo.stop();
+    setShowSearchPrompt(false);
     setCity(normalized);
     addRecent(normalized);
   }
 
   return (
-    <main className={`shell theme-${theme}`}>
-      <WeatherBackground icon={weather.data?.icon} />
+    <main className={`shell theme-${visualTheme}`}>
+      <WeatherBackground icon={displayWeather?.icon} />
       <header className="topbar">
         <a className="brand" href="#">
           <span className="brand-icon">
@@ -64,9 +81,22 @@ export default function Home() {
             language={language}
             theme={theme}
             unit={unit}
-            onLanguage={setLanguage}
-            onTheme={setTheme}
+            onLanguage={(nextLanguage) => {
+              if (demo.running) demo.stop();
+              setLanguage(nextLanguage);
+            }}
+            onTheme={(nextTheme) => {
+              if (demo.running) demo.stop();
+              setTheme(nextTheme);
+            }}
             onUnit={() => setUnit(unit === "celsius" ? "fahrenheit" : "celsius")}
+            demoRunning={demo.running}
+            demoButtonRef={demoButtonRef}
+            onDemo={() => {
+              setShowSearchPrompt(false);
+              if (demo.running) { demo.stop(); setShowSearchPrompt(true); }
+              else startDemo();
+            }}
           />
         </div>
       </header>
@@ -83,7 +113,11 @@ export default function Home() {
           onSearch={search}
           loading={weather.isLoading}
           error={weather.isError}
+          onInteract={() => {
+            if (demo.running) demo.stop();
+          }}
         />
+        {showSearchPrompt && <p className="search-prompt" aria-live="polite">{translate(language, "searchPrompt")}</p>}
         {!city && (
           <RecentSearches
             cities={recent}
@@ -94,8 +128,15 @@ export default function Home() {
           />
         )}
       </section>
-      <AnimatePresence mode="wait">
-        {!city ? (
+      <AnimatePresence>
+        {demo.running && demo.step ? (
+          <motion.section key={`demo-${demo.index}`} className="results demo-results" aria-live="polite" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+            <p className="demo-indicator">{translate(language, "demoLabel")} · {demo.step.label} · {translate(language, demo.step.theme)} <span>{(demo.index ?? 0) + 1}/{demo.total}</span></p>
+            <CurrentWeather weather={demo.step.weather} language={language} unit={unit} onToggleUnit={() => setUnit(unit === "celsius" ? "fahrenheit" : "celsius")} />
+            <WeatherDetails weather={demo.step.weather} language={language} unit={unit} />
+            <Forecast days={demo.step.forecast} language={language} unit={unit} />
+          </motion.section>
+        ) : !city ? (
           <motion.div
             key="empty"
             initial={{ opacity: 0, y: 10 }}
@@ -124,7 +165,7 @@ export default function Home() {
           >
             <ErrorState language={language} code={weather.error.message} />
           </motion.div>
-        ) : weather.data ? (
+        ) : displayWeather ? (
           <motion.section
             key={city}
             className="results"
@@ -143,20 +184,20 @@ export default function Home() {
             }}
           >
             <CurrentWeather
-              weather={weather.data}
+              weather={displayWeather}
               language={language}
               unit={unit}
               onToggleUnit={() => setUnit(unit === "celsius" ? "fahrenheit" : "celsius")}
             />
-            <WeatherDetails weather={weather.data} language={language} unit={unit} />
-            <Forecast days={forecast.data ?? []} language={language} unit={unit} />
+            <WeatherDetails weather={displayWeather} language={language} unit={unit} />
+            <Forecast days={displayForecast} language={language} unit={unit} />
           </motion.section>
         ) : null}
       </AnimatePresence>
       <footer>
         <span>{translate(language, "footer")}</span>
-        <span>OpenWeather · Open-Meteo</span>
       </footer>
+      <AnimatePresence>{showWelcome && !city && <DemoWelcome language={language} demoButtonRef={demoButtonRef} onClose={closeWelcome} onStart={startDemo} />}</AnimatePresence>
     </main>
   );
 }

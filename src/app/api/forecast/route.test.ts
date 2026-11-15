@@ -1,8 +1,8 @@
 /** @jest-environment node */
 import { NextRequest } from "next/server";
 import { GET } from "./route";
-jest.mock("@/lib/weather-service", () => ({ getForecast: jest.fn() }));
-import { getForecast } from "@/lib/weather-service";
+jest.mock("@/features/weather/api", () => ({ getForecast: jest.fn() }));
+import { getForecast } from "@/features/weather/api";
 describe("GET /api/forecast", () => {
   it("rechaza una ubicación vacía", async () => {
     expect((await GET(new NextRequest("http://localhost/api/forecast"))).status).toBe(400);

@@ -2,7 +2,7 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import Home from "./page";
 import { Providers } from "./providers";
-import { usePreferences } from "@/store/preferences";
+import { usePreferences } from "@/stores/preferences";
 
 global.fetch = jest.fn();
 const days = [
@@ -32,6 +32,7 @@ const current = {
 describe("consulta del clima", () => {
   beforeEach(() => {
     localStorage.clear();
+    sessionStorage.clear();
     usePreferences.setState({ unit: "celsius", theme: "system", language: "es", recent: [] });
     (fetch as jest.Mock).mockReset();
     (fetch as jest.Mock).mockImplementation(async (url: string) =>
@@ -39,6 +40,28 @@ describe("consulta del clima", () => {
         ? { ok: true, json: async () => days }
         : { ok: true, json: async () => current },
     );
+  });
+
+  it("muestra la bienvenida en cada entrada y se cierra con Escape o Entendido", async () => {
+    const user = userEvent.setup();
+    const { unmount } = render(<Providers><Home /></Providers>);
+    expect(await screen.findByRole("dialog")).toBeInTheDocument();
+    await user.keyboard("{Escape}");
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    unmount();
+    render(<Providers><Home /></Providers>);
+    expect(await screen.findByRole("dialog")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Entendido" }));
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+  });
+
+  it("inicia el demo desde la bienvenida y la cierra", async () => {
+    const user = userEvent.setup();
+    render(<Providers><Home /></Providers>);
+    await screen.findByRole("dialog");
+    await user.click(screen.getAllByRole("button", { name: "Demo" }).at(-1)!);
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    expect(await screen.findByText(/Demo.*Despejado/)).toBeInTheDocument();
   });
 
   it("muestra temperatura, humedad y descripción tras una búsqueda exitosa", async () => {

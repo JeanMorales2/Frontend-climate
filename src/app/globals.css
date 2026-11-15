@@ -3,9 +3,10 @@
 :root {
   --ink: #16382f;
   --heading: #16382f;
-  --muted: #5e7269;
+  /* AA sobre las tarjetas, incluso cuando el cielo se filtra por el cristal. */
+  --muted: #344940;
   --subtle: #596a62;
-  --accent: #a2462c;
+  --accent: #7a2c1b;
   --accent-ink: #3b735c;
   --paper-base: #f4f5ef;
   --panel-base: #fff;
@@ -21,12 +22,23 @@
   --danger-surface: #fff8f5;
   --danger-border: #f1d3cb;
   /* Efectos del fondo: en claro necesitan tonos más oscuros para verse sobre el papel. */
-  --fx-opacity: 0.9;
-  --fx-rain: #4d7d98;
-  --fx-snow: #8aa2b8;
-  --fx-sparkle: #d48f2c;
-  --fx-cloud: #8fa79a73;
-  --fx-fog: #a9b8ae66;
+  --fx-opacity: 1;
+  --fx-rain: #1f5f8f;
+  --fx-rain-alpha-min: 0.55;
+  --fx-rain-alpha-pulse: 0.15;
+  --fx-rain-width: 1.5;
+  --fx-rain-width-variation: 0.45;
+  --fx-rain-length: 7;
+  --fx-rain-density: 1.45;
+  --fx-rain-storm-density: 1.8;
+  --fx-rain-storm-speed: 3.5;
+  --fx-rain-storm-wind: 1.2;
+  --fx-snow: #4b7899;
+  --fx-sparkle: #bd6d12;
+  /* Nubarrones fríos para el tema claro: varias transparencias y el blur de
+     las capas producen volumen sin convertir el cielo en una masa opaca. */
+  --fx-cloud: radial-gradient(ellipse at 32% 20%, rgb(132 157 171 / 84%) 0%, rgb(82 109 126 / 78%) 38%, rgb(42 67 85 / 76%) 100%);
+  --fx-fog: linear-gradient(90deg, rgb(51 75 89 / 18%) 0%, rgb(74 101 116 / 61%) 30%, rgb(43 68 84 / 69%) 56%, rgb(91 116 129 / 34%) 100%);
   --fx-star: #c7922f;
   --fx-ray: #e8a73d40;
   --fx-lightning: #9fb4dc;
@@ -44,9 +56,26 @@
   --tint-storm: #8c8fb3;
   --tint-snow: #c4d6ea;
   --tint-mist: #bcc5c0;
-  --tint-paper: 22%;
-  --tint-panel: 10%;
+  --tint-paper: 38%;
+  --tint-panel: 16%;
   --tint-line: 30%;
+  /* Tinta para el contenido que se lee directamente sobre el cielo. */
+  --on-sky: #000000;
+  --on-sky-muted: #000000;
+  --on-sky-accent: #000000;
+  --on-sky-line: rgb(16 43 54 / 42%);
+  --sky-control-bg: rgb(255 255 255 / 90%);
+  --sky-control-fg: #102b36;
+  --sky-control-line: rgb(16 43 54 / 32%);
+  --button-bg: #153d31;
+  --button-fg: #ffffff;
+  --humidity-fill: #246b70;
+  --humidity-track: #c7d8d2;
+  --humidity-center: #ffffff;
+  --humidity-text: #16382f;
+  --compass-surface: #ffffff;
+  --compass-text: #16382f;
+  --compass-arrow: #0d5545;
 }
 
 * {
@@ -77,6 +106,11 @@
 @property --tint-level {
   syntax: "<number>";
   inherits: true;
+  initial-value: 0;
+}
+@property --humidity-progress {
+  syntax: "<number>";
+  inherits: false;
   initial-value: 0;
 }
 html {
@@ -128,16 +162,38 @@ html[data-weather="snow"] {
 html[data-weather="mist"] {
   --tint: var(--tint-mist);
 }
+/* En los cielos claros la tinta es oscura. Los cielos de lluvia, tormenta y
+   noche reciben tinta clara; el tinte superior de lluvia evita una zona gris
+   intermedia sin introducir una caja detrás del contenido. */
+html[data-weather="clear"],
+html[data-weather="clouds"],
+html[data-weather="snow"],
+html[data-weather="mist"] {
+  --on-sky: #000000;
+  --on-sky-muted: #000000;
+  --on-sky-accent: #000000;
+  --on-sky-line: rgb(16 43 54 / 42%);
+}
+html[data-weather="clear-night"],
+html[data-weather="rain"],
+html[data-weather="storm"] {
+  --on-sky: #ffffff;
+  --on-sky-muted: #ffffff;
+  --on-sky-accent: #ffffff;
+  --on-sky-line: rgb(248 251 255 / 44%);
+}
 html {
   min-width: 320px;
   background: var(--paper);
+  overflow-x: hidden;
 }
 body {
   margin: 0;
   background: var(--paper);
   color: var(--ink);
   font-family: Arial, Helvetica, sans-serif;
-  min-height: 100vh;
+  min-height: 100dvh;
+  overflow-x: hidden;
 }
 button,
 select {
@@ -153,18 +209,18 @@ select:focus-visible {
 .shell {
   position: relative;
   isolation: isolate;
-  min-height: 100vh;
-  max-width: 1280px;
+  min-height: 100dvh;
+  width: min(100%, 1440px);
+  max-width: 1440px;
   margin: auto;
-  padding: 0 7.5%;
-  overflow: hidden;
-  background: var(--paper);
+  padding: 0 clamp(20px, 6vw, 112px) env(safe-area-inset-bottom);
+  overflow: visible;
   color: var(--ink);
 }
 .theme-dark {
   --ink: #e8f0eb;
   --heading: #f3f7f4;
-  --muted: #aabbb1;
+  --muted: #d0ded6;
   --subtle: #c0cdc5;
   --accent-ink: #a9d2b8;
   --accent: #ffb18e;
@@ -181,8 +237,17 @@ select:focus-visible {
   --danger: #ffb4a6;
   --danger-surface: #3a2622;
   --danger-border: #6b3a31;
-  --fx-opacity: 0.45;
+  --fx-opacity: 0.75;
   --fx-rain: #d5e8f2;
+  --fx-rain-alpha-min: 0.22;
+  --fx-rain-alpha-pulse: 0.2;
+  --fx-rain-width: 1;
+  --fx-rain-width-variation: 0;
+  --fx-rain-length: 5;
+  --fx-rain-density: 1;
+  --fx-rain-storm-density: 1;
+  --fx-rain-storm-speed: 3;
+  --fx-rain-storm-wind: 0.8;
   --fx-snow: #ffffff;
   --fx-sparkle: #fff1c5;
   --fx-cloud: #ffffff99;
@@ -206,18 +271,50 @@ select:focus-visible {
   --tint-paper: 35%;
   --tint-panel: 18%;
   --tint-line: 30%;
+  --on-sky: #ffffff;
+  --on-sky-muted: #ffffff;
+  --on-sky-accent: #ffffff;
+  --on-sky-line: rgb(244 250 246 / 40%);
+  --sky-control-bg: rgb(11 29 38 / 88%);
+  --sky-control-fg: #f4faf6;
+  --sky-control-line: rgb(244 250 246 / 35%);
+  --button-bg: #edf7f0;
+  --button-fg: #12291f;
+  --humidity-fill: #80d1cf;
+  --humidity-track: #34534a;
+  --humidity-center: #10251c;
+  --humidity-text: #ffffff;
+  --compass-surface: #10251c;
+  --compass-text: #ffffff;
+  --compass-arrow: #b9f6dd;
 }
 .theme-dark .current {
-  background: linear-gradient(130deg, var(--panel) 45%, var(--panel-tint));
+  background: linear-gradient(130deg, color-mix(in srgb, var(--panel) 82%, transparent) 45%, color-mix(in srgb, var(--panel-tint) 72%, transparent));
 }
 .theme-dark .detail-item {
   background: var(--detail-surface);
+}
+/* La raíz cubre el primer render; estos valores hacen explícito el contrato
+   del tema claro una vez que React aplica la clase en <html>. */
+html.theme-light {
+  --fx-rain: #1f5f8f;
+  --fx-rain-alpha-min: 0.55;
+  --fx-rain-alpha-pulse: 0.15;
+  --fx-rain-width: 1.5;
+  --fx-rain-width-variation: 0.45;
+  --fx-rain-length: 7;
+  --fx-rain-density: 1.45;
+  --fx-rain-storm-density: 1.8;
+  --fx-rain-storm-speed: 3.5;
+  --fx-rain-storm-wind: 1.2;
+  --fx-cloud: radial-gradient(ellipse at 50% 82%, rgb(63 79 92 / 85%) 0 48%, rgb(75 92 105 / 78%) 70%, rgb(93 110 123 / 55%) 100%);
+  --fx-fog: linear-gradient(90deg, rgb(248 251 250 / 12%) 0%, rgb(255 255 255 / 58%) 34%, rgb(242 247 246 / 70%) 57%, rgb(255 255 255 / 25%) 100%);
 }
 @media (prefers-color-scheme: dark) {
   html.theme-system {
     --ink: #e8f0eb;
     --heading: #f3f7f4;
-    --muted: #aabbb1;
+    --muted: #d0ded6;
     --subtle: #c0cdc5;
     --accent-ink: #a9d2b8;
     --accent: #ffb18e;
@@ -236,6 +333,15 @@ select:focus-visible {
     --danger-border: #6b3a31;
     --fx-opacity: 0.45;
     --fx-rain: #d5e8f2;
+    --fx-rain-alpha-min: 0.22;
+    --fx-rain-alpha-pulse: 0.2;
+    --fx-rain-width: 1;
+    --fx-rain-width-variation: 0;
+    --fx-rain-length: 5;
+    --fx-rain-density: 1;
+    --fx-rain-storm-density: 1;
+    --fx-rain-storm-speed: 3;
+    --fx-rain-storm-wind: 0.8;
     --fx-snow: #ffffff;
     --fx-sparkle: #fff1c5;
     --fx-cloud: #ffffff99;
@@ -259,12 +365,49 @@ select:focus-visible {
     --tint-paper: 35%;
     --tint-panel: 18%;
     --tint-line: 30%;
+    --on-sky: #ffffff;
+    --on-sky-muted: #ffffff;
+    --on-sky-accent: #ffffff;
+    --on-sky-line: rgb(244 250 246 / 40%);
+    --sky-control-bg: rgb(11 29 38 / 88%);
+    --sky-control-fg: #f4faf6;
+    --sky-control-line: rgb(244 250 246 / 35%);
+    --humidity-fill: #80d1cf;
+    --humidity-track: #34534a;
+    --humidity-center: #10251c;
+    --humidity-text: #ffffff;
+    --compass-surface: #10251c;
+    --compass-text: #ffffff;
+    --compass-arrow: #b9f6dd;
+    --button-bg: #edf7f0;
+    --button-fg: #12291f;
   }
   html.theme-system .current {
-    background: linear-gradient(130deg, var(--panel) 45%, var(--panel-tint));
+    background: linear-gradient(130deg, color-mix(in srgb, var(--panel) 82%, transparent) 45%, color-mix(in srgb, var(--panel-tint) 72%, transparent));
   }
   html.theme-system .detail-item {
     background: var(--detail-surface);
+  }
+  html.theme-system .condition-clear { background: radial-gradient(circle at 78% 12%, #f4bf59 0 7%, transparent 24%), linear-gradient(145deg, #1f5073, #6a4b29 65%, #183b58); }
+  html.theme-system .condition-clouds { background: linear-gradient(145deg, #233f55, #4c6374, #1e3445); }
+  html.theme-system .condition-rain { background: linear-gradient(145deg, #193956, #26364f 62%, #1e5268); }
+  html.theme-system .condition-snow { background: linear-gradient(145deg, #406a88, #253d57 58%, #6e96ad); }
+  html.theme-system .condition-mist { background: linear-gradient(145deg, #53656c, #34444d 57%, #65777b); }
+}
+@media (prefers-color-scheme: light) {
+  html.theme-system {
+    --fx-rain: #1f5f8f;
+    --fx-rain-alpha-min: 0.55;
+    --fx-rain-alpha-pulse: 0.15;
+    --fx-rain-width: 1.5;
+    --fx-rain-width-variation: 0.45;
+    --fx-rain-length: 7;
+    --fx-rain-density: 1.45;
+    --fx-rain-storm-density: 1.8;
+    --fx-rain-storm-speed: 3.5;
+    --fx-rain-storm-wind: 1.2;
+    --fx-cloud: radial-gradient(ellipse at 50% 82%, rgb(63 79 92 / 85%) 0 48%, rgb(75 92 105 / 78%) 70%, rgb(93 110 123 / 55%) 100%);
+    --fx-fog: linear-gradient(90deg, rgb(248 251 250 / 12%) 0%, rgb(255 255 255 / 58%) 34%, rgb(242 247 246 / 70%) 57%, rgb(255 255 255 / 25%) 100%);
   }
 }
 html.theme-dark,
@@ -282,13 +425,13 @@ html.theme-system {
   color: var(--heading);
 }
 .weather-background {
-  position: absolute;
+  position: fixed;
   z-index: -1;
   pointer-events: none;
-  inset: 0 0 auto;
-  height: 370px;
+  inset: 0;
+  height: 100dvh;
   opacity: var(--fx-opacity);
-  background: radial-gradient(ellipse at 78% 0%, var(--fx-glow) 0, transparent 52%);
+  background: linear-gradient(145deg, #d7eff7 0%, #f8e4b2 48%, #bddbe2 100%);
 }
 .weather-background span {
   position: absolute;
@@ -316,6 +459,78 @@ html.theme-system {
     background 700ms ease,
     color 400ms ease;
 }
+/* Esta es una veladura del propio cielo, no un panel: queda por encima de las
+   nubes, niebla y relámpagos, pero por debajo de todo el contenido. El recorte
+   cubre solo la franja de lectura superior izquierda (hasta unos 560 px). */
+.weather-background::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+/* En oscuro, una capa negra opaca elimina los picos de luminancia que producen
+   las nubes y la niebla. Con #fff: (1 + .05) / (L + .05) >= 4.5 si L <= .183;
+   la capa deja como máximo el papel #182923 (L = .018), ratio 15.45:1.
+   El punto usa la misma tinta, así que también supera AA sin depender de sombra. */
+html.theme-dark .weather-background.condition-clouds::after,
+html.theme-dark .weather-background.condition-rain::after,
+html.theme-dark .weather-background.condition-storm::after,
+html.theme-dark .weather-background.condition-mist::after {
+  background: radial-gradient(ellipse 100% var(--veil-h, 720px) at 14% 0%, rgb(0 0 0 / 64%) 0%, rgb(0 0 0 / 58%) 38%, rgb(0 0 0 / 30%) 80%, transparent 100%);
+}
+/* Estos selectores tienen más especificidad que html[data-weather], para que
+   el tema (y no el tipo de precipitación) determine correctamente la tinta. */
+html.theme-dark[data-weather] {
+  --on-sky: #ffffff;
+  --on-sky-muted: #ffffff;
+  --on-sky-accent: #ffffff;
+}
+/* En claro el blanco puro fija L = 1 detrás de la tinta #000, por lo que el
+   contraste es (1 + .05) / .05 = 21:1, incluso donde el cielo era más oscuro. */
+html.theme-light .weather-background.condition-clouds::after,
+html.theme-light .weather-background.condition-rain::after,
+html.theme-light .weather-background.condition-storm::after,
+html.theme-light .weather-background.condition-mist::after {
+  background: radial-gradient(ellipse 100% var(--veil-h, 720px) at 14% 0%, rgb(255 255 255 / 82%) 0%, rgb(255 255 255 / 72%) 42%, rgb(255 255 255 / 42%) 82%, transparent 100%);
+}
+html.theme-light[data-weather="clouds"],
+html.theme-light[data-weather="rain"],
+html.theme-light[data-weather="storm"],
+html.theme-light[data-weather="mist"] {
+  --on-sky: #000000;
+  --on-sky-muted: #000000;
+  --on-sky-accent: #000000;
+}
+@media (prefers-color-scheme: dark) {
+  html.theme-system .weather-background.condition-clouds::after,
+  html.theme-system .weather-background.condition-rain::after,
+  html.theme-system .weather-background.condition-storm::after,
+  html.theme-system .weather-background.condition-mist::after {
+    background: radial-gradient(ellipse 100% var(--veil-h, 720px) at 14% 0%, rgb(0 0 0 / 64%) 0%, rgb(0 0 0 / 58%) 38%, rgb(0 0 0 / 30%) 80%, transparent 100%);
+  }
+  html.theme-system[data-weather] {
+    --on-sky: #ffffff;
+    --on-sky-muted: #ffffff;
+    --on-sky-accent: #ffffff;
+  }
+}
+@media (prefers-color-scheme: light) {
+  html.theme-system .weather-background.condition-clouds::after,
+  html.theme-system .weather-background.condition-rain::after,
+  html.theme-system .weather-background.condition-storm::after,
+  html.theme-system .weather-background.condition-mist::after {
+    background: radial-gradient(ellipse 100% var(--veil-h, 720px) at 14% 0%, rgb(255 255 255 / 82%) 0%, rgb(255 255 255 / 72%) 42%, rgb(255 255 255 / 42%) 82%, transparent 100%);
+  }
+  html.theme-system[data-weather="clouds"],
+  html.theme-system[data-weather="rain"],
+  html.theme-system[data-weather="storm"],
+  html.theme-system[data-weather="mist"] {
+    --on-sky: #000000;
+    --on-sky-muted: #000000;
+    --on-sky-accent: #000000;
+  }
+}
 .weather-background.night {
   background: radial-gradient(
     ellipse at 78% 0%,
@@ -329,6 +544,9 @@ html.theme-system {
   inset: 0;
   width: 100%;
   height: 100%;
+  /* Por encima de la veladura del cielo (::after, z-index 1) para que la lluvia
+     conserve su color también en la zona del texto; las gotas son finas y decorativas. */
+  z-index: 2;
 }
 .cloud-layer,
 .fog-layer,
@@ -365,6 +583,63 @@ html.theme-system {
   width: 22%;
   opacity: 0.35;
   animation-duration: 63s;
+}
+/* Cúmulos superpuestos, no bandas planas. En claro recorren la derecha y el
+   tercio inferior, dejando libre el área de lectura superior izquierda. */
+html.theme-light .cloud-layer i {
+  top: 37%;
+  left: 52%;
+  width: 57%;
+  height: 164px;
+  opacity: 0.82;
+  border-radius: 48% 56% 44% 52%;
+  background:
+    radial-gradient(ellipse 25% 54% at 17% 70%, rgb(93 110 123 / 58%) 0 72%, transparent 74%),
+    radial-gradient(ellipse 30% 68% at 40% 49%, rgb(75 92 105 / 78%) 0 72%, transparent 74%),
+    radial-gradient(ellipse 33% 73% at 67% 57%, rgb(63 79 92 / 85%) 0 72%, transparent 74%),
+    radial-gradient(ellipse 24% 49% at 91% 76%, rgb(93 110 123 / 62%) 0 72%, transparent 74%),
+    linear-gradient(to bottom, transparent 31%, rgb(63 79 92 / 72%) 74%, transparent 100%);
+  box-shadow: inset 0 18px 28px rgb(189 204 214 / 16%), inset 0 -22px 30px rgb(34 48 60 / 34%);
+  filter: blur(15px);
+  animation-name: cloud-sail-light;
+}
+html.theme-light .cloud-layer i:nth-child(2) {
+  top: 62%;
+  left: 20%;
+  width: 62%;
+  height: 184px;
+  opacity: 0.72;
+}
+html.theme-light .cloud-layer i:nth-child(3) {
+  top: 18%;
+  left: 68%;
+  width: 38%;
+  height: 128px;
+  opacity: 0.58;
+}
+html.theme-light .condition-storm .cloud-layer i {
+  opacity: 0.9;
+  background:
+    radial-gradient(ellipse 25% 54% at 17% 70%, rgb(67 78 91 / 73%) 0 72%, transparent 74%),
+    radial-gradient(ellipse 30% 68% at 40% 49%, rgb(55 67 79 / 85%) 0 72%, transparent 74%),
+    radial-gradient(ellipse 33% 73% at 67% 57%, rgb(42 52 64 / 88%) 0 72%, transparent 74%),
+    radial-gradient(ellipse 24% 49% at 91% 76%, rgb(73 85 98 / 76%) 0 72%, transparent 74%),
+    linear-gradient(to bottom, transparent 31%, rgb(42 52 64 / 82%) 74%, transparent 100%);
+}
+@media (prefers-color-scheme: light) {
+  html.theme-system .cloud-layer i {
+    top: 37%; left: 52%; width: 57%; height: 164px; opacity: 0.82;
+    border-radius: 48% 56% 44% 52%;
+    background: radial-gradient(ellipse 25% 54% at 17% 70%, rgb(93 110 123 / 58%) 0 72%, transparent 74%), radial-gradient(ellipse 30% 68% at 40% 49%, rgb(75 92 105 / 78%) 0 72%, transparent 74%), radial-gradient(ellipse 33% 73% at 67% 57%, rgb(63 79 92 / 85%) 0 72%, transparent 74%), radial-gradient(ellipse 24% 49% at 91% 76%, rgb(93 110 123 / 62%) 0 72%, transparent 74%), linear-gradient(to bottom, transparent 31%, rgb(63 79 92 / 72%) 74%, transparent 100%);
+    box-shadow: inset 0 18px 28px rgb(189 204 214 / 16%), inset 0 -22px 30px rgb(34 48 60 / 34%);
+    filter: blur(15px); animation-name: cloud-sail-light;
+  }
+  html.theme-system .cloud-layer i:nth-child(2) { top: 62%; left: 20%; width: 62%; height: 184px; opacity: 0.72; }
+  html.theme-system .cloud-layer i:nth-child(3) { top: 18%; left: 68%; width: 38%; height: 128px; opacity: 0.58; }
+  html.theme-system .condition-storm .cloud-layer i {
+    opacity: 0.9;
+    background: radial-gradient(ellipse 25% 54% at 17% 70%, rgb(67 78 91 / 73%) 0 72%, transparent 74%), radial-gradient(ellipse 30% 68% at 40% 49%, rgb(55 67 79 / 85%) 0 72%, transparent 74%), radial-gradient(ellipse 33% 73% at 67% 57%, rgb(42 52 64 / 88%) 0 72%, transparent 74%), radial-gradient(ellipse 24% 49% at 91% 76%, rgb(73 85 98 / 76%) 0 72%, transparent 74%), linear-gradient(to bottom, transparent 31%, rgb(42 52 64 / 82%) 74%, transparent 100%);
+  }
 }
 .fog-layer i {
   position: absolute;
@@ -448,6 +723,11 @@ html.theme-system {
     transform: translateX(150vw);
   }
 }
+@keyframes cloud-sail-light {
+  to {
+    transform: translateX(10vw);
+  }
+}
 @keyframes fog-drift {
   to {
     transform: translateX(18%);
@@ -473,18 +753,26 @@ html.theme-system {
     opacity: 0;
   }
 }
-.condition-rain,
-.condition-storm {
-  background: radial-gradient(ellipse at 78% 0%, var(--fx-glow-rain) 0, transparent 55%);
+.condition-rain {
+  background: linear-gradient(145deg, #254d6b 0%, #365f7b 48%, #789bb0 100%);
 }
 .condition-snow {
-  background: radial-gradient(ellipse at 78% 0%, var(--fx-glow-snow) 0, transparent 55%);
+  background: linear-gradient(145deg, #dff4ff, #8db5d4 58%, #d6edf7);
 }
 .condition-clear {
-  background: radial-gradient(ellipse at 78% 0%, var(--fx-glow-clear) 0, transparent 55%);
+  background: radial-gradient(circle at 78% 12%, #ffe49a 0 8%, transparent 25%), linear-gradient(145deg, #9ed8f5, #f8d28c 65%, #bde6f1);
 }
+.condition-clouds { background: linear-gradient(145deg, #b5c9d6, #758ea2 58%, #c8d3da); }
+.condition-mist { background: linear-gradient(145deg, #d9e1e0, #a9b7b9 54%, #e2e8e4); }
+.condition-storm { background: radial-gradient(circle at 62% 16%, #8790cc 0, transparent 30%), linear-gradient(145deg, #514568, #202b46 62%, #596576); }
+.weather-background.night { background: radial-gradient(circle at 78% 12%, #5b75b1 0, transparent 24%), linear-gradient(145deg, #14254d, #243b70 60%, #15213e); }
+.theme-dark .condition-clear { background: radial-gradient(circle at 78% 12%, #f4bf59 0 7%, transparent 24%), linear-gradient(145deg, #1f5073, #6a4b29 65%, #183b58); }
+.theme-dark .condition-clouds { background: linear-gradient(145deg, #233f55, #4c6374, #1e3445); }
+.theme-dark .condition-rain { background: linear-gradient(145deg, #193956, #26364f 62%, #1e5268); }
+.theme-dark .condition-snow { background: linear-gradient(145deg, #406a88, #253d57 58%, #6e96ad); }
+.theme-dark .condition-mist { background: linear-gradient(145deg, #53656c, #34444d 57%, #65777b); }
 .topbar {
-  height: 92px;
+  min-height: 92px;
   border-bottom: 1px solid var(--line);
   display: flex;
   align-items: center;
@@ -522,8 +810,9 @@ html.theme-system {
 .eyebrow {
   font-size: 10px;
   letter-spacing: 1.8px;
-  color: var(--subtle);
+  color: var(--weather-background-text, var(--subtle));
   font-weight: 700;
+  text-shadow: var(--weather-background-text-shadow, none);
 }
 .unit-toggle,
 .select-control {
@@ -557,19 +846,22 @@ html.theme-system {
 }
 .intro h1 {
   font:
-    500 clamp(42px, 6vw, 68px)/1.03 Georgia,
+    500 clamp(1.9rem, 4.2vw + 0.5rem, 3.4rem)/1.08 Georgia,
     serif;
   letter-spacing: -2.5px;
   margin: 0;
+  color: var(--weather-background-text, var(--heading));
+  text-shadow: var(--weather-background-text-shadow, none);
 }
 .intro h1 em {
   font-weight: 400;
   color: var(--accent);
 }
 .intro-copy {
-  color: var(--muted);
+  color: var(--weather-background-text, var(--muted));
   font-size: 15px;
   margin: 16px 0 31px;
+  text-shadow: var(--weather-background-text-shadow, none);
 }
 .search-form {
   max-width: 540px;
@@ -600,6 +892,8 @@ html.theme-system {
   margin-bottom: 9px;
 }
 .search-label {
+  color: var(--weather-background-text, inherit);
+  text-shadow: var(--weather-background-text-shadow, none);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -622,7 +916,9 @@ kbd {
 }
 .search-box {
   height: 58px;
-  background: var(--panel);
+  background: color-mix(in srgb, var(--panel) 78%, transparent);
+  backdrop-filter: blur(18px) saturate(125%);
+  -webkit-backdrop-filter: blur(18px) saturate(125%);
   border: 1px solid var(--border);
   border-radius: 12px;
   display: flex;
@@ -784,7 +1080,9 @@ kbd {
   gap: 15px;
 }
 .panel {
-  background: var(--panel);
+  background: color-mix(in srgb, var(--panel) 78%, transparent);
+  backdrop-filter: blur(18px) saturate(125%);
+  -webkit-backdrop-filter: blur(18px) saturate(125%);
   border: 1px solid var(--line);
   border-radius: 16px;
   padding: 24px;
@@ -793,7 +1091,7 @@ kbd {
   min-height: 280px;
   position: relative;
   overflow: hidden;
-  background: linear-gradient(130deg, var(--panel) 45%, var(--panel-tint));
+  background: linear-gradient(130deg, color-mix(in srgb, var(--panel) 82%, transparent) 45%, color-mix(in srgb, var(--panel-tint) 72%, transparent));
   transform-style: preserve-3d;
 }
 .current::after {
@@ -896,48 +1194,139 @@ kbd {
   font-size: inherit;
   font-weight: inherit;
 }
+/* La entrada usa retrasos sólo visuales: cada celda conserva su tamaño desde el
+   primer frame y por ello no desplaza al resto de la cuadrícula. */
+.details h2 {
+  animation: details-title-in 480ms cubic-bezier(.2, .8, .2, 1) both;
+}
+.detail-item,
+.sun-arc-item {
+  overflow: visible;
+  will-change: transform, opacity;
+  animation: detail-item-in 520ms cubic-bezier(.2, .85, .25, 1) both;
+}
+.detail-grid > :nth-child(1) { animation-delay: 40ms; }
+.detail-grid > :nth-child(2) { animation-delay: 100ms; }
+.detail-grid > :nth-child(3) { animation-delay: 160ms; }
+.detail-grid > :nth-child(4) { animation-delay: 220ms; }
+.detail-grid > :nth-child(5) { animation-delay: 280ms; }
+.detail-grid > :nth-child(6) { animation-delay: 340ms; }
+.detail-grid > :nth-child(7) { animation-delay: 400ms; }
+.detail-grid > :nth-child(8) { animation-delay: 460ms; }
+.detail-grid > :nth-child(9) { animation-delay: 520ms; }
+.detail-item {
+  border: 1px solid transparent;
+  transition: transform 220ms ease, box-shadow 220ms ease, border-color 220ms ease, background-color 220ms ease;
+}
+@keyframes details-title-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes detail-item-in {
+  from { opacity: 0; transform: translateY(14px) scale(.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@media (hover: hover) {
+  .detail-item:hover,
+  .detail-item:focus-within {
+    position: relative;
+    z-index: 1;
+    transform: translateY(-3px) scale(1.04);
+    border-color: color-mix(in srgb, var(--accent) 45%, var(--line));
+    box-shadow: 0 12px 24px var(--shadow), 0 0 16px color-mix(in srgb, var(--accent) 18%, transparent);
+  }
+  .detail-item:hover > svg,
+  .detail-item:focus-within > svg { animation: detail-icon-bounce 420ms ease both; }
+}
+@media (hover: none) {
+  .detail-item:active { transform: scale(1.02); border-color: color-mix(in srgb, var(--accent) 42%, var(--line)); }
+}
+@keyframes detail-icon-bounce {
+  50% { transform: translateY(-3px) scale(1.13); }
+}
+.detail-item:nth-child(1) > svg { animation: thermometer-pulse 2.8s ease-in-out infinite; transform-origin: center bottom; }
+.detail-item:nth-child(4) > svg { animation: gauge-settle 1.15s cubic-bezier(.2, .8, .3, 1) both; transform-origin: center bottom; }
+.detail-item:nth-child(5) > svg { animation: eye-blink 5.8s ease-in-out infinite; transform-origin: center; }
+.detail-item:nth-child(6) > svg { animation: detail-cloud-drift 4.6s ease-in-out infinite; }
+.detail-item:nth-child(7) > svg { animation: sunrise-float 4s ease-in-out infinite; }
+.detail-item:nth-child(8) > svg { animation: sunset-float 4s ease-in-out infinite; }
+@keyframes thermometer-pulse { 50% { transform: scaleY(1.12) scaleX(.96); } }
+@keyframes gauge-settle { 0% { transform: rotate(-12deg); } 65% { transform: rotate(5deg); } 100% { transform: rotate(0); } }
+@keyframes eye-blink { 0%, 44%, 48%, 100% { transform: scaleY(1); } 46% { transform: scaleY(.12); } }
+@keyframes detail-cloud-drift { 50% { transform: translateX(4px); } }
+@keyframes sunrise-float { 50% { transform: translateY(-3px); } }
+@keyframes sunset-float { 50% { transform: translateY(3px); } }
 .detail-graphic {
   min-height: 22px;
 }
 .humidity-ring {
   --humidity: 0%;
-  width: 23px;
-  height: 23px;
+  --humidity-progress: 1;
+  width: 36px;
+  height: 36px;
+  padding: 4px;
   border-radius: 50%;
   display: grid;
   place-items: center;
-  background: conic-gradient(#6fa9ae var(--humidity), #dce8e5 0);
+  background: conic-gradient(var(--humidity-fill) calc(var(--humidity) * var(--humidity-progress)), var(--humidity-track) 0);
+  position: relative;
+  overflow: hidden;
+  animation: humidity-fill 900ms ease-out both, humidity-ring-breathe 3.8s ease-in-out 900ms infinite;
 }
+.humidity-ring::after {
+  content: "";
+  position: absolute;
+  inset: -35%;
+  background: linear-gradient(115deg, transparent 42%, rgb(255 255 255 / .42) 50%, transparent 58%);
+  animation: humidity-sheen 3.8s ease-in-out infinite;
+}
+.humidity-ring span { position: relative; z-index: 1; }
+@keyframes humidity-sheen { 0%, 24% { transform: translateX(-55%) rotate(12deg); opacity: 0; } 38% { opacity: .8; } 58%, 100% { transform: translateX(55%) rotate(12deg); opacity: 0; } }
+@keyframes humidity-fill { from { --humidity-progress: 0; } to { --humidity-progress: 1; } }
+@keyframes humidity-ring-breathe { 50% { transform: scale(1.04); } }
 .humidity-ring span {
-  width: 15px;
-  height: 15px;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
-  background: var(--panel);
-  font-size: 0;
+  display: grid;
+  place-items: center;
+  background: var(--humidity-center);
+  color: var(--humidity-text);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: -0.4px;
+  line-height: 1;
 }
 .wind-compass {
   position: relative;
-  width: 23px;
-  height: 23px;
-  border: 1px solid var(--border);
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--compass-text);
   border-radius: 50%;
-  color: var(--icon);
+  background: var(--compass-surface);
+  color: var(--compass-text);
 }
 .wind-compass span {
   position: absolute;
-  top: -7px;
-  left: 8px;
-  font-size: 7px !important;
+  z-index: 1;
+  top: 2px;
+  left: 0;
+  right: 0;
+  font-size: 8px !important;
+  line-height: 1;
+  text-align: center;
 }
 .wind-compass i {
   display: block;
   position: absolute;
-  inset: 1px;
+  inset: 8px 0 0;
   transform-origin: center;
   text-align: center;
   font-style: normal;
-  font-size: 17px;
-  line-height: 19px;
+  font-size: 20px;
+  font-weight: 900;
+  line-height: 25px;
+  color: var(--compass-arrow);
 }
 .sun-arc-item {
   grid-column: 1 / -1;
@@ -959,6 +1348,8 @@ kbd {
   width: 100%;
   height: 62px;
 }
+.sun-arc circle { transform-box: fill-box; transform-origin: center; animation: sun-arc-halo 2.8s ease-in-out infinite; }
+@keyframes sun-arc-halo { 50% { opacity: .7; transform: scale(1.16); } }
 .sun-arc-label {
   grid-row: 2;
   white-space: nowrap;
@@ -982,28 +1373,44 @@ kbd {
 .forecast-row {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
+  padding: 18px;
+  margin: -18px;
+  overflow: visible;
 }
 .forecast-day {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 7px;
   flex-direction: column;
-  padding: 8px;
+  padding: 10px;
   border-right: 1px solid var(--line);
   font-size: 12px;
   text-align: center;
   transition:
-    transform 220ms ease,
-    background-color 220ms ease;
-}
-.forecast-day:hover {
-  transform: translateY(-4px);
-  background: var(--mint);
-  border-radius: 12px;
+    transform 280ms ease,
+    background-color 220ms ease,
+    opacity 300ms ease,
+    box-shadow 300ms ease;
 }
 .forecast-day:last-child {
   border: 0;
 }
+.demo-indicator {
+  grid-column: 1 / -1;
+  justify-self: start;
+  margin: 0;
+  padding: 7px 11px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--panel);
+  color: var(--muted);
+  font-size: 12px;
+}
+.demo-indicator span { margin-left: 6px; font-variant-numeric: tabular-nums; }
+.search-prompt { color: var(--weather-background-text, var(--accent-ink)); font-size: 13px; font-weight: 700; margin: 12px 0 -8px; animation: search-glow 900ms ease-in-out 2; text-shadow: var(--weather-background-text-shadow, none); }
+@keyframes search-glow { 50% { text-shadow: 0 0 16px color-mix(in srgb, var(--accent) 65%, transparent); } }
+.demo-control { min-height: 38px; border: 1px solid color-mix(in srgb, var(--accent) 52%, var(--line)); border-radius: 24px; background: color-mix(in srgb, var(--accent) 16%, var(--panel)); color: var(--heading); padding: 0 12px; font-size: 11px; font-weight: 800; cursor: pointer; box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 15%, transparent); }
 .forecast-icon {
   width: 42px;
   height: 42px;
@@ -1064,7 +1471,8 @@ footer {
   margin-top: 54px;
   padding: 20px 0;
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
+  text-align: center;
   color: var(--subtle);
   font-size: 11px;
 }
@@ -1157,8 +1565,8 @@ html {
 }
 @supports (padding: max(0px)) {
   .shell {
-    padding-left: max(7.5%, env(safe-area-inset-left));
-    padding-right: max(7.5%, env(safe-area-inset-right));
+    padding-left: max(clamp(20px, 6vw, 112px), env(safe-area-inset-left));
+    padding-right: max(clamp(20px, 6vw, 112px), env(safe-area-inset-right));
   }
 }
 @media (min-width: 1024px) {
@@ -1168,9 +1576,26 @@ html {
   .results {
     grid-template-columns: 1.15fr 0.85fr;
   }
-  .current,
   .details {
     min-height: 280px;
+  }
+  .current {
+    align-self: start;
+    min-height: 0;
+    padding: 20px;
+  }
+  .current .temperature {
+    font-size: clamp(72px, 5.4vw, 88px);
+    margin-top: 15px;
+  }
+  .current .weather-icon {
+    width: clamp(96px, 8vw, 120px);
+    height: clamp(96px, 8vw, 120px);
+    top: 46px;
+    right: 7%;
+  }
+  .current .range {
+    margin-top: 14px;
   }
 }
 @media (max-width: 767px) {
@@ -1221,8 +1646,8 @@ html {
     overflow-x: auto;
     scroll-snap-type: x mandatory;
     overscroll-behavior-x: contain;
-    margin-right: -20px;
-    padding-right: 20px;
+    margin: -8px -20px;
+    padding: 8px 20px;
   }
   .forecast-day {
     flex: 0 0 min(34vw, 140px);
@@ -1261,8 +1686,8 @@ html {
     gap: 5px;
   }
   .compact-preference {
-    min-width: 36px;
-    height: 36px;
+    min-width: 44px;
+    min-height: 44px;
     display: inline-grid;
     place-items: center;
     padding: 0 8px;
@@ -1277,7 +1702,30 @@ html {
   .unit-compact {
     min-width: 44px;
   }
+  .compact-preference.demo-control { padding: 0 10px; }
 }
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .forecast-row:has(.forecast-day:hover) .forecast-day:not(:hover) { opacity: .68; transform: scale(.97); }
+  .forecast-day:hover, .forecast-day:focus-visible { z-index: 2; transform: translateY(-8px) scale(1.1); background: color-mix(in srgb, var(--mint) 84%, var(--panel)); border: 1px solid color-mix(in srgb, var(--accent) 45%, var(--line)); border-radius: 12px; box-shadow: 0 18px 32px var(--shadow), 0 0 20px color-mix(in srgb, var(--accent) 24%, transparent); }
+  .forecast-day:hover .forecast-icon, .forecast-day:focus-visible .forecast-icon { transform: scale(1.16); }
+}
+@media (hover: none) {
+  .forecast-day:active { z-index: 2; transform: scale(1.07); background: var(--mint); }
+}
+
+.demo-welcome { position: fixed; z-index: 30; inset: 0; pointer-events: none; }
+.welcome-backdrop { position: absolute; inset: 0; width: 100%; border: 0; background: radial-gradient(ellipse calc(var(--spotlight-w, 0px) / 2) calc(var(--spotlight-h, 0px) / 2) at var(--spotlight-x, -100px) var(--spotlight-y, -100px), transparent 72%, rgb(8 18 27 / .78) 78%); pointer-events: auto; cursor: default; }
+.welcome-halo { position: fixed; z-index: 1; left: var(--spotlight-x); top: var(--spotlight-y); width: var(--spotlight-w); height: var(--spotlight-h); transform: translate(-50%, -50%); border: 2px solid #d8ecff; border-radius: 999px; box-shadow: 0 0 0 7px #9fc8ff55, 0 0 28px 8px #8ec5ff99; animation: welcome-halo 1.5s ease-in-out infinite; }
+.welcome-tip { position: fixed; z-index: 2; pointer-events: auto; left: var(--tip-x, -1000px); top: var(--tip-y, -1000px); width: min(330px, calc(100vw - 32px)); padding: 18px; border: 1px solid #ffffff88; border-radius: 16px; background: #10243af5; color: #ffffff; box-shadow: 0 0 0 7px #9fc8ff33, 0 18px 50px #0008; }
+.welcome-tip::before { content: ""; position: absolute; left: calc(var(--tip-arrow-x) - 13px); top: -14px; width: 26px; height: 26px; border-left: 1px solid #ffffff88; border-top: 1px solid #ffffff88; background: #10243af5; transform: rotate(45deg); }
+.welcome-tip-above::before { top: auto; bottom: -14px; transform: rotate(225deg); }
+.welcome-tip strong, .welcome-tip p, .welcome-tip button { position: relative; z-index: 1; }
+.welcome-tip strong { display: block; font-size: 15px; }
+.welcome-tip p { margin: 8px 0 14px; font-size: 13px; line-height: 1.45; }
+.welcome-tip button { border: 1px solid #ffffff88; border-radius: 999px; background: transparent; color: #fff; padding: 7px 11px; font-weight: 700; cursor: pointer; }
+.welcome-tip .welcome-start { margin-left: 8px; background: #d8ecff; border-color: #d8ecff; color: #142535; }
+@keyframes welcome-halo { 50% { box-shadow: 0 0 0 12px #9fc8ff33, 0 0 34px 12px #8ec5ffcc; } }
+@media (prefers-reduced-motion: reduce) { .welcome-halo { animation: none; } }
 .unit-toggle {
   position: relative;
   isolation: isolate;
@@ -1361,6 +1809,22 @@ html {
   .results {
     grid-template-columns: 1fr 1fr;
   }
+  .current {
+    align-self: start;
+    min-height: 0;
+    padding: 20px;
+  }
+  .current .temperature {
+    font-size: clamp(60px, 7vw, 76px);
+    margin-top: 16px;
+  }
+  .current .weather-icon {
+    width: 96px;
+    height: 96px;
+    top: 46px;
+    right: 7%;
+  }
+  .current .range { margin-top: 14px; }
 }
 @media (min-width: 768px) {
   .forecast-row {
@@ -1394,6 +1858,62 @@ html {
     right: 2%;
   }
 }
+
+/* El texto comparte directamente el plano del cielo. Las variables de tinta
+   conservan el contraste sin añadir una lámina, borde ni sombra de contenedor. */
+.topbar { border-bottom-color: var(--on-sky-line); }
+.brand, .intro h1 { color: var(--on-sky); }
+.eyebrow, .intro-copy, .search-label, .search-prompt, footer { color: var(--on-sky-muted); }
+.intro h1 em, .brand-dot { color: var(--on-sky-accent); }
+.brand-icon {
+  background: var(--sky-control-bg);
+  color: var(--sky-control-fg);
+  border: 1px solid var(--sky-control-line);
+}
+.topbar .choice-control, .topbar .compact-preference {
+  background: var(--sky-control-bg);
+  border-color: var(--sky-control-line);
+  color: var(--sky-control-fg);
+}
+.topbar .choice-option { color: var(--sky-control-fg); }
+.topbar .choice-highlight { background: color-mix(in srgb, var(--on-sky-accent) 24%, var(--sky-control-bg)); }
+.topbar .demo-control { background: var(--sky-control-bg); color: var(--sky-control-fg); border-color: var(--sky-control-line); }
+
+/* Las tarjetas preservan un fondo suficientemente opaco para que muted también
+   conserve AA cuando el cielo cambia de luminancia. */
+.panel, .search-box { background: color-mix(in srgb, var(--panel) 94%, transparent); }
+.detail-item { background: color-mix(in srgb, var(--detail-surface) 96%, transparent); }
+.location, .local-date, .description, .range, .feels-like, .detail-item span:not(.detail-graphic), .forecast-day small, .muted, .demo-indicator, .recent, .clear-recent { color: var(--muted); }
+/* Las recientes viven directamente sobre el cielo. La leyenda y la acción usan
+   la misma tinta adaptativa del hero; cada ciudad es un control compacto con
+   su propia superficie, igual que los pills de la barra superior. */
+.recent > span:first-child,
+.recent .clear-recent { color: var(--on-sky-muted); }
+.recent-chip {
+  background: var(--sky-control-bg);
+  border-color: var(--sky-control-line);
+  color: var(--sky-control-fg);
+}
+.recent-chip button,
+.recent-chip button + button {
+  color: var(--sky-control-fg);
+}
+.recent-chip button + button { border-left: 1px solid var(--sky-control-line); }
+.humidity-ring { background: conic-gradient(var(--humidity-fill) calc(var(--humidity) * var(--humidity-progress)), var(--humidity-track) 0); }
+.detail-item .humidity-ring span { background: var(--humidity-center); color: var(--humidity-text); }
+.wind-compass { color: var(--compass-text); border-color: var(--compass-text); background: var(--compass-surface); }
+.detail-item .wind-compass span { color: var(--compass-text); font-weight: 800; }
+.wind-compass i { color: var(--compass-arrow); font-weight: 900; }
+.search-box button[type="submit"] { background: var(--button-bg); color: var(--button-fg); }
+.search-box button:disabled { background: var(--button-bg); color: var(--button-fg); opacity: 1; filter: saturate(.55); }
+.demo-control { background: var(--button-bg); border-color: var(--button-bg); color: var(--button-fg); }
+.compact-preference, .choice-control { color: var(--ink); }
+.search-box input::placeholder { color: var(--subtle); opacity: 1; }
+.empty-state { background: color-mix(in srgb, var(--panel) 94%, transparent); backdrop-filter: blur(18px); }
+.error { color: var(--danger); }
+@media (max-width: 767px) {
+  .topbar { min-height: 72px; height: auto; }
+}
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -1405,4 +1925,34 @@ html {
   .weather-background span {
     animation: none;
   }
+}
+
+/* En móvil el hero se apila y ocupa más alto: la veladura del cielo se alarga. */
+@media (max-width: 767px) {
+  .weather-background {
+    --veil-h: 1050px;
+  }
+  html.theme-light .cloud-layer i {
+    top: 57%;
+    left: 35%;
+    width: 82%;
+    height: 152px;
+  }
+  html.theme-light .cloud-layer i:nth-child(2) {
+    top: 72%;
+    left: -20%;
+    width: 92%;
+    height: 174px;
+  }
+  html.theme-light .cloud-layer i:nth-child(3) {
+    top: 84%;
+    left: 23%;
+    width: 70%;
+    height: 140px;
+  }
+}
+@media (max-width: 767px) and (prefers-color-scheme: light) {
+  html.theme-system .cloud-layer i { top: 57%; left: 35%; width: 82%; height: 152px; }
+  html.theme-system .cloud-layer i:nth-child(2) { top: 72%; left: -20%; width: 92%; height: 174px; }
+  html.theme-system .cloud-layer i:nth-child(3) { top: 84%; left: 23%; width: 70%; height: 140px; }
 }

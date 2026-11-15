@@ -1,8 +1,8 @@
 /** @jest-environment node */
 import { NextRequest } from "next/server";
 import { GET } from "./route";
-jest.mock("@/lib/weather-service", () => ({ searchCities: jest.fn() }));
-import { searchCities } from "@/lib/weather-service";
+jest.mock("@/features/weather/api", () => ({ searchCities: jest.fn() }));
+import { searchCities } from "@/features/weather/api";
 
 const request = (url: string) => new NextRequest(url);
 
