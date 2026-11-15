@@ -11,11 +11,11 @@ const config: Config = {
     "!src/**/*.test.{ts,tsx}",
     "!src/types/**",
     "!src/app/layout.tsx",
-    "!src/app/providers.tsx",
-    "!src/components/background/particles.ts",
+    "!src/**/index.ts",
   ],
-  coverageThreshold: { global: { branches: 85, functions: 85, lines: 85, statements: 85 } },
+  coverageThreshold: { global: { branches: 97, functions: 97, lines: 97, statements: 97 } },
   coveragePathIgnorePatterns: ["node_modules", ".next", "coverage"],
+  modulePathIgnorePatterns: ["<rootDir>/.next/"],
 };
 
 export default createJestConfig(config);
